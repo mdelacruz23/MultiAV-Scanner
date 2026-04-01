@@ -1,5 +1,3 @@
- Here’s a clean, copy-paste-ready **`README.md`** (no extra formatting, no UI blocks):
-
 ---
 
 # MultiAV S3 Scanner
