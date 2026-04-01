@@ -1,0 +1,6 @@
+Guild_Image_${export_name}:
+  stage: build
+  trigger: gap/guild
+  variables:
+    PROD_IMAGE_NAME: $image_name
+    PROD_IMAGE_TAG: $image_tag

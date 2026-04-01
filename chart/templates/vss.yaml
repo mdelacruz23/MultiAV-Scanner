@@ -1,0 +1,22 @@
+{{- if .Values.vss.enabled }}
+{{ $ns := .Values.project.namespace }}
+---
+{{- range $key, $value := .Values.vss.vssMap }}
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: {{ $value.name }}
+spec:
+  type: kv-v2
+  mount: {{ $value.secretMount }}
+  path: {{ $value.path }}
+  destination:
+    name: {{ $value.createSecretName }}
+    type: Opaque
+    create: true
+  refreshAfter: 30s
+  vaultAuthRef: vauth-{{ $ns }}
+---
+{{- end }}
+{{- end }}
+

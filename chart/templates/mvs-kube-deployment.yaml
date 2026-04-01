@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.project.name }}-deployment
+  annotations:
+    batch.job.kubernetes.io/trigger-mode: all-at-once
+spec:
+  serviceName: "{{ .Values.project.name }}"
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      component: {{ .Values.project.name }}
+      app: {{ .Values.project.name }}
+  template:
+    metadata:
+      labels:
+        component: {{ .Values.project.name }}
+        app: {{ .Values.project.name }}
+    spec:
+      containers:
+        - name: {{ .Values.project.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port1 }}
+            - containerPort: {{ .Values.service.port2 }}
+            - containerPort: {{ .Values.service.port3 }}
+          env:
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.aws.region }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: accesskeyid
+                  key: accesskeyid
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secretaccesskey
+                  key: secretaccesskey
+            - name: DEFS_ACCESS
+              valueFrom:
+                secretKeyRef:
+                  name: accesskeyid
+                  key: accesskeyid
+            - name: DEFS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secretaccesskey
+                  key: secretaccesskey
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: shared
+              mountPath: {{ .Values.persistence.mountPath | default "/data" | quote }}
+          securityContext:
+            runAsNonRoot: true
+            privileged: {{ .Values.securityContext.privileged }}
+            runAsGroup: {{ .Values.securityContext.runAsGroup }}
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+          resources:
+{{ toYaml .Values.resources | indent 12}}
+      restartPolicy: Always
+      volumes:
+        - name: shared
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.existingClaim -}}
+              {{ .Values.persistence.existingClaim | quote }}
+            {{- else -}}
+              {{ .Values.project.name }}-shared-pvc
+            {{- end }}
+      imagePullSecrets:
+{{- if .Values.imagePullSecrets }}
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+{{- end }}
+status: {}

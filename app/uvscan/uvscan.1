@@ -1,0 +1,397 @@
+.PU
+.TH UVSCAN 1 local
+.SH NAME
+uvscan  \- detects and cleans computer viruses and other potentially unwanted software
+
+.SH SYNOPSIS
+.ll +8
+
+.B uvscan
+  [--afc size] [--allole] [--analyze | --analyse] 
+  [-c |--clean] [--cleandocall] [--config file]
+  [--dam] [-d | --dat | --data-directory directory] [--delete] 
+  [--exclude file] [-e |--exit-on-error]  
+  [--extensions EXT1,[EXT2]] [--extlist] [--extra file] 
+  [--fam] [-f | --file file] [--floppya] [--floppyb]
+  [-h | --help] [--ignore-compressed] [--ignore-links] [--load file] 
+  [--mailbox] [--manalyze | --manalyse | --macro-heuristics] 
+  [--maxfilesize size]   [--mime] [-m | --move directory] 
+  [--noboot] [--nocomp] [--nodecrypt] [--nodoc] [--noexpire] 
+  [--nojokes] [--norename] [--noscript] [--one-file-system]
+  [--panalyze | --panalyse] [-p | --atime-preserve | --plad] 
+  [--program] [-r | --recursive | --sub]   
+  [--secure] [-s | --selected] [--showcomp] [--summary]
+  [--timeout seconds]
+  [-u | --unzip] [-v | --verbose] [--version] [--virus-list] 
+  [-] [file | directory]   
+.ll -8
+ 
+.SH DESCRIPTION
+This program scans directories and individual files
+(including some types of compressed files) for viruses and other 
+potentially unwanted software.
+In addition, the Intel-based FreeBSD and Linux distributions 
+can scan for boot-sector viruses. 
+.PP
+The program options allow you to determine:
+    how and where to look for infected files.
+    how to respond to any infected files.
+    how to report its scanning activities.
+.PP
+When run without options, the program simply displays 
+a brief summary of its options. When run with only a directory name specified, 
+the program scans every file in that directory only, and issues a message 
+if any infected file is found. 
+.PP
+Many extra options are available, as described next.
+.SH OPTIONS
+.TP
+.B \-
+Denote the end of options in the command line. Anything after this 
+is a file or directory to scan.  
+
+Alternatively, this option denotes that the following file is prefixed with "-". 
+This option therefore prevents any confusion between file names and options.  
+.TP
+.B \--afc size	
+Specify the file cache size. By default, the cache size is 12MB. A larger cache size can improve scanning performance in some cases, unless the computer has low memory.  
+The range of sizes allowed is 8Mb to 512Mb. 
+Specify the size in megabytes. For example, 
+.I --afc 64 
+specifies 64Mb of cache.  
+.TP
+.B \--allole	
+Check every file for OLE objects. 
+.TP
+.B \--analyze, --analyse	
+Use heuristic analysis to find potential viruses in program files and in macros
+that otherwise appear to be clean. 
+This analysis occurs after the program has checked the file for other viruses.	
+.TP
+.B \-c, --clean 	
+Automatically remove any viruses from infected files. 
+(By default, the program states only that infections were found 
+but does not try to clean the infected file.)
+
+If the program cannot clean the file, it tries to rename the file, 
+and displays a warning message.      
+.TP
+.B \--cleandocall, --dam
+Delete all macros in a file if an infected macro is found. 
+Use this option with caution with the 
+.I --fam 
+option. 
+.TP
+.B \--config file, --load file	
+Run the options specified in the file. 
+You may not nest configuration files 
+within other configuration files.  
+.TP
+.B \-d directory, --dat directory, --data-directory directory	
+Specify the location of the DAT files. If you do not specify this option 
+in the command line, the program looks in the same directory 
+from where it is executed. If the program cannot find these data files, 
+it issues exit code 6. 		
+.TP
+.B \--delete	
+Automatically delete any infected files that are found. 
+.TP
+.B \-e, --exit-on-error	
+Quit and display an error message if an error occurs.
+The error message indicates the severity of the error. 
+See "DIAGNOSTICS" for an explanation of exit codes.
+.TP
+.B \--exclude file	
+Exclude the directories or files from the scan  
+as specified in the file.  
+.TP
+.B \--extensions EXT1[,EXT2,...]	
+Examine files that have the specified extensions. 
+Separate each extension name with a comma, but without a space. 
+By default, the program scans all files. If you choose this option, 
+the program scans only susceptible files, files with execute permission,
+and those you specify here.
+To see the list of susceptible files, use the 
+.I --extlist 
+option. 
+.TP
+.B \--extlist 	
+Display a list of all file extensions that are susceptible to infection. 
+These are scanned when -s or --selected is set.  
+.TP
+.B \--extra file	
+Specify the full path and file name of any extra.dat file. 
+If you do not specify this option in the command line, the program looks 
+in the same directory from where it was executed. If it cannot find this file, 
+the program issues exit code 6.
+.TP	
+.B \-f file, --file file
+Scan the directories or files as specified in the file. 	
+.TP
+.B \--fam	
+Find all files that have macros, not just macros suspected as being infected. 
+Take care if you use this option with the 
+.I --cleandocall, --dam 
+options. 
+.TP
+.B \--floppya, --floppyb 	
+Scan the boot sector of the floppy disk in drive A or B. 
+This option is for Intel-based UNIX systems only, namely FreeBSD and Linux.
+.TP
+.B \-h, --help	
+Display a list of all options.
+.TP
+.B \--ignore-compressed, --nocomp	
+Ignore compressed files. By default, the program scans files saved 
+in these compression formats: ICE, LZEXE, PKLITE, Cryptcom, COM2EXE, Diet, Teledisk, 
+Microsoft Expand and GZIP. This option reduces the scanning time 
+but increases the threat because many file types are not scanned. 
+.TP
+.B \--ignore-links	
+Do not resolve any symbolic links and do not scan the link targets.	
+Normally the program 'follows' each symbolic link and scans the linked file. 
+.TP
+.B \-m  directory, --move  directory	
+Move any infected files to a quarantine location as specified.
+When the program moves an infected file, it replicates 
+the full directory path of the infected file
+inside the quarantine directory so you can determine 
+the original location of the infected file.
+If you use this option with 
+.I -c 
+or
+.I --clean
+, the program copies 
+the infected files to a quarantine location 
+and tries to clean the original. 
+If the program cannot clean the original, it deletes the file. 
+.TP
+.B \--mailbox
+Scan plain-text mailboxes such as 
+Eudora, PINE, and Netscape. 
+Most mailboxes will be in MIME format, and therefore the 
+.I --mime
+option is also required.
+This option does not clean or rename infected mail items; 
+you must first extract them from the mailbox. 
+.TP
+.B \--manalyze, --manalyse, --macro-heuristics	
+Use heuristic analysis to find potential macro viruses. 
+This option is a subset of 
+.I --analyze, --analyse
+. 
+.TP
+.B \--maxfilesize size 	
+Examine only those files that are smaller than the specified 
+file size (measured in Megabytes). For example,
+.I --maxfilesize 5 
+means files smaller than 5 Megabytes.
+.TP
+.B \--mime 	
+Scan MIME-encoded files. 
+This type of file is not scanned by default. 
+.TP
+.B \--noboot	
+Do not scan the boot sector.
+.TP
+.B \--nodecrypt	
+Do not decrypt Microsoft Office compound documents that are password-protected.
+By default, macros inside password-protected compound
+documents are scanned by employing "password cracking"
+techniques. If, for reasons of security, you do not require
+these techniques, use this option. Password cracking does
+not render the file readable.
+.TP
+.B \--nodoc	
+Do not scan Microsoft Office document files. 
+.TP
+.B \--noexpire	
+Do not issue a warning if the DAT files are out of date.
+.TP
+.B \--nojokes	
+Do not report any joke programs.
+.TP
+.B \--norename 	
+Do not rename an infected file that cannot be repaired.
+.TP
+.B \--noscript 	
+Do not scan files that contain HTML, JavaScript, Visual Basic, 
+or Script Component Type Libraries. 
+This type of file is normally scanned by default. Stand-alone
+JavaScript and Visual Basic Script files will still be scanned.
+.TP
+.B \--one-file-system	
+Scan an entire directory tree without scanning mounted file systems, 
+if you use this option in conjunction with the 
+.I -r, --recursive, --sub
+option. 
+Normally, the program treats a mount point as a subdirectory 
+and scans that file system. This option prevents the scan  
+from running in subdirectories that are on a different file system 
+to the original directory. 
+.TP
+.B \-p, --atime-preserve, --plad 	
+Preserve the last-accessed time and date for files 
+that are scanned.
+This is important for use with some backup software. 
+.TP
+.B \--panalyze, --panalyse	
+Use heuristic detection to identify potential program viruses. 
+This is a subset of 
+.I --analyze, --analyse
+. 
+.TP
+.B \--program	
+Scan for potentially unwanted applications such as password crackers.
+.TP
+.B \-r, --recursive, --sub	
+Examine any subdirectories in addition to the specified target directory. 
+.TP
+.B \-s, --selected
+Look for infections in any file that has execute permissions, 
+and in all files that are susceptible to infection. 
+By default, all files are scanned.
+By scanning only files that are susceptible to infection, 
+the program can scan faster. 
+To see the list of susceptible files, use the 
+.I --extlist 
+option. 
+.TP
+.B \--secure	
+Examine all files, unzip archive files and use heuristic analysis. 
+This option activates the 
+.I --analyze 
+and 
+.I --unzip 
+options. If the  
+.I --selected
+or  
+.I --extensions
+options are in the command line, they are ignored.
+.TP
+.B \--showcomp	
+Report any files that are packaged.
+.TP
+.B \--summary	
+Produce a summary of the scan, which includes:
+
+   How many files were examined.
+   How many infected files were found.
+   How many infections were removed.	
+.TP
+.B \--timeout seconds  
+Set the maximum time (in seconds) to scan any one file. 
+.TP
+.B \-u, --unzip	
+Scan inside archive files, such as those saved in ZIP, LHA, PKarc, ARJ, TAR, CHM 
+and RAR formats. By default, the program does not examine archive files. 
+
+If used with 
+.I -c
+or 
+.I --clean
+, this option tries to clean non-compressed files 
+inside ZIP files only. No other archive formats can be cleaned.
+The option 
+.I -c
+or 
+.I --clean
+does not delete or rename infected files within ZIPs.   
+It does not rename the ZIP file itself. 
+The program cannot clean infected files found within other archive formats;
+you must first extract them from the archive file in order to clean them. 
+.TP
+.B \-v, --verbose	
+Display a progress summary during the scan.	
+.TP
+.B \--version 	
+Display the program's version number. 	
+.TP
+.B \--virus-list 	
+Display the name of each infection that the program can detect.
+.SH "FILES"
+The following program files reside in the installation
+directory of each distribution of the software.
+
+   uninstall-uvscan     Uninstallation file
+   uvscan               Executable file
+   uvscan_secure        Script, uses --secure option
+
+   license.dat          License file
+   messages.dat         Messages file
+
+   *.dat             	Files containing definitions 
+                        of potentially unwanted software  
+
+Your installation also includes one 
+of the following shared libraries:
+
+   AIX               libaixfv.a
+   FreeBSD           libbsdfv.so.4
+   HP-UX             libhpxfv.4
+   Linux (Intel)     liblnxfv.so.4
+   Sun Solaris       libsunfv.so.4 
+
+.SH "DIAGNOSTICS"
+The program returns a code when it exits. 
+These codes identify any potentially unwanted software or problems 
+that are found during a scan.
+
+ Code    Description
+
+  0      The program found no potentially unwanted software
+         and returned no errors. 
+
+  2      The integrity check for a DAT file failed. 
+
+  6      A general problem has occurred. 
+
+  8      The program could not find a DAT file. 
+
+ 12      The program tried to clean a file, and 
+         that clean failed for some reason, and 
+         the file is still infected. 
+
+ 13      The scanner found one or more viruses or hostile 
+         objects (such as a Trojan horse, joke program, 
+         or a test file). 
+
+ 15      The program’s self-check failed; the program 
+         might be infected or damaged. 
+
+ 19      The program succeeded in cleaning all 
+         infected files. 
+
+102      The program quit because the user included the 
+         --exit-on-error option. The program returns 
+         this code when an unexpected condition occurs; 
+         for example, the program cannot open a file 
+         or runs out of available memory. The program 
+         exits immediately and does not finish the scan. 
+         This code occurs only if you specified the 
+         --exit-on-error option when you started the 
+         program. If you did not specify that option, 
+         the program returns exit code 6.
+ 
+
+.SH "NOTES"
+To perform a scan after the installation is complete, 
+you might need to include the name of, and path to, your installation
+directory in a variable:
+
+   AIX                  LIBPATH
+   FreeBSD              LD_LIBRARY_PATH
+   HP-UX                SHLIB_PATH
+   Linux                LD_LIBRARY_PATH   
+   Sun Solaris          LD_LIBRARY_PATH
+
+
+It is important to use the most recent versions of the DAT files.
+Hundreds of new viruses appear each month. Often, older DAT files
+cannot assist the scanning software in detecting these new variations.
+The DAT files with your original copy of the program might not detect 
+potentially unwanted software that was discovered after you bought the
+product.
+
+.comment RMID UNIX
+.comment DBN 003

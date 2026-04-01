@@ -1,0 +1,1 @@
+0 */5 * * * /bin/bash -lc /app/cleanup_tmp.sh >> /var/log/monit.log 2>&1

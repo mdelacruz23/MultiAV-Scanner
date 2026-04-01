@@ -1,0 +1,84 @@
+version: '3.9'
+x-services-volume:
+  &services-volume
+  type: bind
+  source: ~/srv/scan/
+  target: /var/scan
+services:
+  mvs:
+      image: registry.master.forcenex.us/gap/data-movement/multiav-scan-aws-ec2-objects/multiav-scan:latest
+      privileged: true
+      container_name: mvs
+      build:
+        context: .
+        dockerfile: Dockerfile-mvs
+      ports:
+        - 8009:8009
+        - 2812:2812
+        - 2820:2820
+      volumes: 
+        - <<: *services-volume
+        # - mvs-volume:/var/scan
+        - type: bind
+          source: ~/.aws/
+          target: /root/.aws
+        - type: bind
+          source: ~/srv/mvs-log2
+          target: /var/log
+      environment:
+         BATCH_SIZE: "100"
+         LOCAL_DEFS: "true"
+         AWS_DEFAULT_REGION: us-east-1
+         DEFS_BUCKET: data-vs-definitions
+         DEFS_PREFIX: scanners_defs
+        # ACCOUNT_ID: $(aws sts get-caller-identity --query 'Account' --output text)
+         INPUT_SQS_PATH: https://sqs.us-east-1.amazonaws.com/$ACCOUNT_ID/<change-input-queue>
+         OUTPUT_SQS_PATH: https://sqs.us-east-1.amazonaws.com/$ACCOUNT_ID/<change-output-queue>
+         INFECTED_BUCKET: data-multiscan-infected
+         FS_SCANNERS: "false"
+         FS_INPUT_DIR_PATH: /var/scan/input
+         FS_OUTPUT_DIR_PATH: /var/scan/output
+         FS_INFECTED_PATH: /var/scan/infected
+#         BOOTSTRAP_SERVER: ${IP}
+#         KAFKA_HOSTS: ${IP}
+#         KAFKA_CONSUMER_TOPIC: 'kafka-mvs-src'
+#         KAFKA_PRODUCER_TOPIC: 'kafka-mvs-dst'
+#  zookeeper:
+#    hostname: zookeeper
+#    container_name: zookeeper
+#    image: 'bitnami/zookeeper:latest'
+#    ports:
+#      - 2181:2181
+#    environment:
+#       - ALLOW_ANONYMOUS_LOGIN=yes
+#  kafka:
+#    image: wurstmeister/kafka
+#    container_name: kafka
+#    ports:
+#      - 9092:9092
+#    depends_on:
+#      - zookeeper
+#    restart: always
+#    environment:
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_ADVERTISED_HOST_NAME: ${IP}
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_CREATE_TOPICS: "kafka-mvs-src:1:1,kafka-mvs-dst:1:1"
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#  nifi:
+#    privileged: true
+#    build:
+#      context: .
+#      cache_from:
+#        - apache/nifi:latest
+#      dockerfile: Dockerfile-nifi
+#    container_name: nifi 
+#    ports:
+#      - 8443:8443
+#    volumes:
+#      # - mvs-volume:/var/scan
+#      # - ~/srv/scan:/var/mvs
+#      - ~/srv/scan:/var/scan
+#volumes:
+#  mvs-volume:

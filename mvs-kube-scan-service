@@ -1,0 +1,296 @@
+#!/bin/bash
+## BEGIN INIT INFO
+# Provides:          brings up MVS in kubernetes
+# Short-Description: brings up MVS in kubernetes a
+# Description:       Provides the virus scan service of S3 objects 
+#                    using dats files downloaded from the S3 bucket
+### END INIT INFO
+# set -x
+#declare r DOCKER_SERVER="registry.master.forcenex.us"
+# DOCKER_USER_NAME - User login name for gitLab container registry
+# DOCKER_PASSWD - user deploy token for read-only access to the registry images. 
+# DOCKER_EMAIL - user email address
+
+# declare DOCKER_USER_NAME=<user name>
+# declare DOCKER_PASSWD=<password>
+# declare DOCKER_EMAIL=<email>
+
+declare r AWS_ACCESS_KEY= $AWS_ACCESS_KEY
+declare r AWS_SECRET_KEY= $AWS_SECRET_ACCESS_KEY
+declare r GB="Gi"
+declare r MIN_MEM=8
+declare r DISK=150
+declare r CLAIM0_PERSISTENT='./kube-deploy/mvs-claim0-persistentvolumeclaim.yaml'
+declare r CLAIM_FS_PERSISTENT='./kube-deploy/mvs-fileshare.yaml'
+declare r ZOOKEEPER_DEPLOYMENT_FILE='./kube-deploy/zookeeper-deployment.yaml'
+declare r ZOOKEEPER_IP_SERVICE='./kube-deploy/zookeeper-ip-service.yaml'
+declare r KAFKA_DEPLOYMENT_FILE='./kube-deploy/kafka-1-deployment.yaml'
+declare r KAFKA_IP_SERVICE='./kube-deploy/kafka-1-ip-service.yaml'
+declare r MVS_DEPLOYMENT_FILE='./kube-deploy/mvs-kube-deployment.yaml'
+declare r MVS_IP_SERVICE='./kube-deploy/mvs-ip-service.yml'
+declare r NIFI_HELM_DEPLOYMENT='./kube-deploy/helm-nifi'
+
+# Configure input and output SQS queue
+declare r SQS_INPUT_QUEUE_PATTERN='<change-input-queue>'
+declare r SQS_OUTPUT_QUEUE_PATTERN='<change-output-queue>'
+declare r SQS_INPUT_QUEUE='<input-queue>'
+declare r SQS_OUTPUT_QUEUE='<output-queue>'
+declare fs_scanners=false
+#comment out for deployment to forcenexus
+#KUBE_STATUS=$(minikube status | grep host | awk '{print $2}')
+
+pod_name() {
+    __name__=$(kubectl get pods -n gap-data-movement | grep ${1} | awk {'print $1'})
+    echo $__name__
+}
+
+deployment_name() {
+    __name__=$(kubectl get deployments -n gap-data-movement | grep ${1} | awk {'print $1'})
+    echo $__name__
+}
+
+do_start () {
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux
+        declare r CPUS=`getconf _NPROCESSORS_ONLN`
+        declare r MEM=`free -g | grep Mem  | awk '{print $NF - 8}'`
+        if [ $MEM -lt 0 ]; then
+            echo "Insufficient memory for MVS pod... Min ${MIN_MEM} GB"
+            exit 1
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        declare CPUS=`getconf _NPROCESSORS_ONLN`
+        CPUS=$((CPUS - 1 ))
+        declare r MEM=`sysctl hw.memsize | awk '{ printf "%i\n", $2/1024/1024/1024 - 8 }'`
+        if [ $MEM -lt 0 ]; then
+            echo "Insufficient memory for MVS pod... Min ${MIN_MEM} GB"
+            exit 1
+        fi
+    fi
+  #  if [ "$KUBE_STATUS" != "Running" ] 
+  #  then
+#        echo "Starting Minikube for MVS cluster"
+        # minikube start --cpus $CPUS --memory ${MEM}"g" --driver='virtualbox'
+#        minikube start --cpus $CPUS --memory ${MEM}"g" --disk-size ${DISK}"g" --driver='virtualbox'
+        (($? != 0)) && { printf '%s\n' "kube start failed"; exit 1; }
+ #   else
+  #      echo "Minikube is already running"
+  #  fi
+   # declare SWAPMEM=$((${MEM} + ${MEM}*3/10))
+   # declare IP=$(/sbin/ifconfig -l | xargs -n1 ipconfig getifaddr)
+
+   # echo "Home: ${HOME} Docker run with  CPU: ${CPUS} RAM: ${MEM} SWAP: ${SWAPMEM}"
+   # if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux
+   #     sed -i "s/memory:.*/memory: ${MEM}${GB}/" ${MVS_DEPLOYMENT_FILE}
+   #     sed -i "s/cpu:.*/cpu: ${CPUS}/" ${MVS_DEPLOYMENT_FILE}
+   # elif [[ "$OSTYPE" == "darwin"* ]]; then
+   #     # Mac OSX
+   #     sed -i '' -e "s/memory:.*/memory: ${MEM}${GB}/" ${MVS_DEPLOYMENT_FILE}
+   #     sed -i '' -e "s/cpu:.*/cpu: ${CPUS}/" ${MVS_DEPLOYMENT_FILE}
+   # fi  
+    kubectl get secret regcred &> /dev/null -n gap-data-movement
+   # if [ $? != 0 ]
+   # then
+  #      kubectl create secret docker-registry regcred --docker-server=${DOCKER_SERVER} --docker-username=${DOCKER_USER_NAME} --docker-password=${DOCKER_PASSWD}  --docker-email=${DOCKER_EMAIL}
+    #    (($? != 0)) && { printf '%s\n' "kube create docker secret failed"; exit 1; }
+   # fi 
+    kubectl get secret aws-key  &> /dev/null -n gap-data-movement
+    if [ $? != 0 ]
+    then
+      kubectl create secret generic aws-key --from-literal=aws-access-key-id=${AWS_ACCESS_KEY} -n gap-data-movement
+       (($? != 0)) && { printf '%s\n' "kube create secret - aws access key - failed"; exit 1; }
+    fi
+    kubectl get secret aws-secret &> /dev/null -n gap-data-movement
+    if [ $? != 0 ]
+    then
+        kubectl create secret generic aws-secret --from-literal=aws-secret-access-key=${AWS_SECRET_KEY} -n gap-data-movement
+        (($? != 0)) && { printf '%s\n' "kube create secret - aws secret key - failed"; exit 1; }
+    fi
+    kubectl apply -f ${CLAIM0_PERSISTENT} -n gap-data-movement && kubectl apply -f ${CLAIM_FS_PERSISTENT} -n gap-data-movement
+    (($? != 0)) && { printf '%s\n' "kube apply FS persistent - failed"; exit 1; }
+    # export IP=$(/sbin/ifconfig -l | xargs -n1 ipconfig getifaddr)
+    # envsubst < ${MVS_DEPLOYMENT_FILE} | kubectl apply -f -
+    if [ $fs_scanners = true ]
+    then
+        kubectl apply -f ${ZOOKEEPER_DEPLOYMENT_FILE} -n gap-data-movement && kubectl apply -f ${ZOOKEEPER_IP_SERVICE} -n gap-data-movement
+        echo "Waiting for zookeeper pod to enter ready condition"
+        sleep 20
+        zoo=$(pod_name "zookeeper-deployment-")
+        kubectl wait --for=condition=ready --timeout=180s pod/$zoo -n gap-data-movement
+        (($? != 0)) && { printf '%s\n' "zookeeper deployment file failed"; exit 1; }
+    
+        kubectl apply -f ${KAFKA_DEPLOYMENT_FILE} -n gap-data-movement && kubectl apply -f ${KAFKA_IP_SERVICE} -n gap-data-movement
+        echo "Waiting for kafka  pod to enter ready condition"
+        sleep 30
+        kafka=$(pod_name "kafka")
+        kubectl wait --for=condition=ready --timeout=180s pod/${kafka} -n gap-data-movement
+        (($? != 0)) && { printf '%s\n' "kafka deployment file failed"; exit 1; }
+
+        # deploy nifi  with helm
+        helm uninstall nifi -n gap-data-movement  > /dev/null 2>&1 
+        helm install nifi ${NIFI_HELM_DEPLOYMENT} -n gap-data-movement > /dev/null 2>&1
+        sleep 30
+        nifizoo=$(pod_name "nifi-zookeeper")
+        kubectl wait --for=condition=ready --timeout=600s pod/${nifizoo} -n gap-data-movement
+        (($? != 0)) && { printf '%s\n' "nifi deployment file failed"; exit 1; }
+        nifi=$(pod_name "nifi-0")
+        kubectl wait --for=condition=ready --timeout=600s pod/${nifi} -n gap-data-movement
+        (($? != 0)) && { printf '%s\n' "nifi deployment file failed"; exit 1; }
+        
+        # Setting up port forwarding for access to kafka"
+        echo "Setting up port forwarding for access to kafka"
+        pkill -9 -f '.*port-forward.*kafka.*9092'
+        kubectl port-forward "pod/"$(pod_name "kafka") 9092:9092 -n gap-data-movement> /dev/null 2>&1  &
+        (($? != 0)) && { printf '%s\n' "kafka port forwarding failed"; exit 1; }
+    
+        # Setting up port forwarding for access to nifi
+        echo "Setting up port forwarding for access to NiFi"
+        pkill -9 -f '.*port-forward.*nifi.*8443'
+        kubectl port-forward service/nifi 8443:8443 -n gap-data-movement > /dev/null 2>&1  &
+        (($? != 0)) && { printf '%s\n' "nifi port forwarding failed"; exit 1; }
+        awk -i inplace 'f{$0="            value: \"true\""; f=0} /FS_SCANNERS/{f=1}1' ${MVS_DEPLOYMENT_FILE}
+    else
+        awk -i inplace 'f{$0="            value: \"false\""; f=0} /FS_SCANNERS/{f=1}1' ${MVS_DEPLOYMENT_FILE}
+        find $(pwd)  -name $(basename ${MVS_DEPLOYMENT_FILE}) -exec sed -i '' -e "s/${SQS_INPUT_QUEUE_PATTERN}/${SQS_INPUT_QUEUE}/" {} \;
+        find $(pwd)  -name $(basename ${MVS_DEPLOYMENT_FILE}) -exec sed -i '' -e "s/${SQS_OUTPUT_QUEUE_PATTERN}/${SQS_OUTPUT_QUEUE}/" {} \;
+    fi
+    kubectl apply -f ${MVS_DEPLOYMENT_FILE} -n gap-data-movement && kubectl apply -f ${MVS_IP_SERVICE} -n gap-data-movement
+    echo "Waiting for mvs pod to enter ready condition"
+    sleep 20
+    mvs=$(pod_name "mvs")
+    kubectl wait --for=condition=ready --timeout=420s pod/${mvs} -n gap-data-movement
+    (($? != 0)) && { printf '%s\n' "mvs deployment file failed"; exit 1; }
+
+    # Setting up port forwarding for access to MVS monitor console
+  #  echo "Setting up port forwarding for access to MVS monitor console"
+  #  pkill -9 -f '.*port-forward.*mvs.*2812'
+  #  kubectl port-forward "pod/"$(pod_name "mvs") 2812:2812 > /dev/null 2>&1  &
+  #  (($? != 0)) && { printf '%s\n' "mvs 2812 port forwarding failed"; exit 1; }
+
+  #  kubectl port-forward "pod/"$(pod_name "mvs") 9000:9000 > /dev/null 2>&1  &
+  #  (($? != 0)) && { printf '%s\n' "mvs port 9000 forwarding failed"; exit 1; }
+}
+
+do_stop () {
+    echo "Stopping scan service and deleting kubernetes cluster"
+    # pkill -9 -f '.*port-forward.*mvs.*2812'
+    helm uninstall nifi --namespace gap-data-movement
+    kubectl delete deployment $(deployment_name "mvs") -n gap-data-movement
+    kubectl delete deployment $(deployment_name "kafka") -n gap-data-movement > /dev/null 2>&1 
+    kubectl delete deployment $(deployment_name "zookeeper-0") -n gap-data-movement > /dev/null 2>&1
+    kubectl delete deployment $(deployment_name "zookeeper-deployment") -n gap-data-movement > /dev/null 2>&1
+    #minikube stop
+    #minikube delete --all
+}
+
+do_mvs() {
+    kubectl exec -it $(pod_name "mvs")  -- /bin/bash -n gap-data-movement
+}
+
+do_logs() {
+    kubectl exec -it $(pod_name)  -- /bin/bash -c "cd /var/log/multiav  && tail -f S3multi_scan.log" -n gap-data-movement
+}
+
+do_perf() {
+    if [ "$KUBE_STATUS" != "Running" ]
+    then
+        echo "cluster scan service is not running "
+        exit 1
+     fi
+     kubectl exec --stdin --tty $(pod_name) -- atop -n gap-data-movement
+}
+
+do_status() {
+    if [ "$KUBE_STATUS" != "Running" ] 
+    then
+        echo "cluster scan service is not running "
+        exit 1
+     fi
+     kubectl cluster-info &> /dev/null
+     retVal=$?
+     if [ $retVal -ne 0 ]; then
+         echo "cluster scan service is not running "
+     else
+         echo "scan service is running "
+     fi  
+     return $retVal
+}
+
+Help()
+{
+   # Display Help
+   echo "Multi Virus Scanner Service"
+   echo
+   echo "Syntax: $0  <start|restart> [-u|p|m|h]"
+   echo "options:"
+   echo "u     - user login name for gitLab container registry"
+   echo "p     - user deploy token for read-only access to the registry images"
+   echo "m     - user email address"
+   echo "h     - Print this Help."
+   echo
+}
+
+if [ $# -gt 1 ] 
+then
+    command=$1
+fi    
+case "$1" in
+    start|restart)
+       OPTIND=2
+       while getopts "fu:p:m:h" option; do
+          case $option in
+             h|help) # display Help
+                Help
+                exit;;
+             f) # Enable FS scanners
+                fs_scanners=true;;
+             u) # user name
+                DOCKER_USER_NAME=${OPTARG};;
+             p) # password
+                DOCKER_PASSWD=${OPTARG};;
+             m) # email
+                DOCKER_EMAIL=${OPTARG};;
+            \?) # Invalid option
+                echo "Error: Invalid option"
+                Help
+                exit;;
+          esac
+       done
+esac
+if [ "$1" = "start" ]
+then
+    if [ -z ${DOCKER_USER_NAME+x} ] || [ -z ${DOCKER_USER_NAME+x} ] || [ -z ${DOCKER_USER_NAME+x} ]; then
+        echo "ERROR! start option requires user name, password, amd email"
+        echo "$0 start -u <user_name> -p <passwd> -m <email>"
+    fi
+    echo "DOCKER_USER_NAME: ${DOCKER_USER_NAME} DOCKER_PASSWD: ${DOCKER_PASSWD} DOCKER_EMAIL: ${DOCKER_EMAIL}"
+fi
+case "$1" in
+
+    start|stop|status)
+        do_${1}
+        ;;
+    restart)
+        do_stop
+        do_start
+        ;;
+    mvs)
+        do_status
+        do_mvs
+        ;;
+    logs)
+        do_status
+        do_logs
+        ;;
+    perf)
+        do_status
+        do_perf
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status|perf|mvs|logs}"
+        exit 1
+        ;;  
+esac
+

@@ -1,0 +1,137 @@
+stages:
+  - build
+  - deploy_to_red
+  - cleanup
+
+include:
+  - local: pipeline-scripts/push-image.yml
+    rules:
+      - if: $CI_COMMIT_BRANCH == "master"
+
+variables:
+  VERSION: "7.0.5"
+  BUILD_DIR: "./"
+  ENDPOINT: "https://rancher.jadeuc.com"
+  BEARER_TOKEN: "$BEARER_TOKEN"
+  CLUSTER: "pass-itss"
+  CLUSTER_ID: "c-m-vq5jjwtm"
+  PROJECT_ID: "p-kqnpc"
+
+build_mvs:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "Building ${CI_PROJECT_NAME}"
+    - export DOCKER_CONTAINER_FULLNAME="${CI_REGISTRY_IMAGE}:${VERSION}"
+    - export TAG="$(date +%Y%m%d)-${CI_COMMIT_SHORT_SHA}"
+    - cd ${BUILD_DIR}
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - cd pipeline-scripts
+    - chmod 777 kaniko_build_script.sh
+    - ./kaniko_build_script.sh $TAG $CI_PROJECT_NAME $DOCKER_CONTAINER_FULLNAME
+  when: manual
+  only:
+    - dev
+
+
+
+deploy_to_red:
+  stage: deploy_to_red
+  image: docker:stable-git
+  variables:
+    CLUSTER_ID: "c-m-vq5jjwtm"
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: 'tcp://localhost:2375'
+    DOCKER_TLS_CERTDIR: ""
+    KUBE_LATEST_VERSION: "v1.21.5"
+    HELM_VERSION: "v3.6.1"
+    RANCHER_ENDPOINT: "https://rancher.jadeuc.com/"
+    NAMESPACE: "gap-data-movement"
+  allow_failure: true
+  script:
+    - echo $CLUSTER_ID
+    - apk update
+    - get_kubectl_helm
+    - get_kubeconfig_token
+
+    - echo ${AWS_ACCESS_KEY_ID}
+    # This step actually deploys the multiav-scan app
+    - sed -i "s/<input-queue>/mark-multiscan-input-s3-events/g" mvs-kube-scan-service
+    - sed -i "s/<output-queue>/mark-multiscan-output-s3-events/g" mvs-kube-scan-service
+    - ./mvs-kube-scan-service start -f
+  when: manual
+  only:
+    - jadeuc-deployment
+
+delete_deployment:
+  stage: cleanup
+  image: docker:stable-git
+  variables:
+    CLUSTER_ID: "c-m-vq5jjwtm"
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: 'tcp://localhost:2375'
+    DOCKER_TLS_CERTDIR: ""
+    KUBE_LATEST_VERSION: "v1.21.5"
+    HELM_VERSION: "v3.6.1"
+    RANCHER_ENDPOINT: "https://rancher.jadeuc.com/"
+    NAMESPACE: "gap-data-movement"
+  allow_failure: true
+  script:
+    - echo $CLUSTER_ID
+    - apk update
+    - get_kubectl_helm
+    - get_kubeconfig_token
+    - echo ${AWS_ACCESS_KEY_ID}
+    - ./mvs-kube-scan-service stop
+  when: manual
+  only:
+    - master
+
+.auto_devops: &auto_devops |
+  function get_kubeconfig_token() { 
+     kubectl config set-cluster     mycluster    --server=$ENDPOINT/k8s/clusters/$CLUSTER_ID --insecure-skip-tls-verify=true
+     kubectl config set-credentials mycredential --token=${BEARER_TOKEN}
+     kubectl config set-context     mycontext    --cluster=mycluster --user=mycredential
+     kubectl config use-context     mycontext
+   }
+
+  function get_kubectl_helm() {
+     apk update
+     apk add --no-cache ca-certificates tar bash git curl openssl coreutils util-linux zip 
+     # download kubectl v1.21
+     curl -LO https://dl.k8s.io/release/v1.21.0/bin/linux/amd64/kubectl
+     cp kubectl /usr/local/bin/kubectl
+     chmod +x /usr/local/bin/kubectl 
+     kubectl version --client
+     # get helm ver v3.9.0
+     curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
+     tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
+     mv linux-amd64/helm /usr/local/bin/helm
+     chmod +x /usr/local/bin/helm 
+   }
+
+before_script:
+  - *auto_devops
+
+
+
+# Import the Guild templates
+#include:
+#  - project: gap/guild
+#    ref: main
+#    file: templates/guildable-jobs.yaml
+# Import the Guild templates
+#include:
+#  - project: gap/guild
+#    ref: main
+#    file: templates/kaniko-build-template.yaml
+
+#Kaniko:
+#  extends: .kaniko
+
+#variables:
+#    IMAGE_NAME: mvs
+#    IMAGE_TAG: "7.1"

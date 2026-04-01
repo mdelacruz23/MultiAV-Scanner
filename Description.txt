@@ -1,0 +1,22 @@
+
+Current multi-scan implementation is based on aws sqs queue input and sqs queue output.
+The main infinite loop invokes function processFiles with parameters sqs client, s3client, input and output sqs queue, multiav instance and additional flags.
+
+The processFiles function invokes getSQSMessages with sqs client and sqs input queue.
+If sqs messages are present on the input queue, those messages are returned to the processFiles function which calls downloadFiles passing retrieved set of messages, sqs client, s3 client and input/output sqs queues.
+
+The downloadFiles function is used to parse sqs messages, extract individual events and assign each event to a separate thread for processing.
+Thread processing include downloading s3 object specified in the event from s3 bucket and unpacking s3 object if the object is identified as one of the  archive types. All threads run in parallel.
+When all threads complete processing the scan_handler function is called with parameters that include list of objects to be downloaded, sqs client, s3 client, sqs input/output queues, and the multi-scan object reference.
+The scan_handler function invokes the multi-scan reference which does actual scanning of all files by all engines in parallel.
+After scanning of all files is completed, the scan results of each file (in the case of archives each file inside the archive and the final result of the archive itself) are examined.
+If a file is clean (archive can only be clean if all files inside it are clean) the scan_handler posts sqs notification on the sqs output queue.
+An infected file is tagged with scanning information (i.e., name of engines used for scanning, results from each engine for this file, virus type(s) detected),  and moved to the infected bucket.
+In both cases ( clean or infected), message for that file is deleted from the sqs input queue.
+Finally, the temporary work directory is cleaned up by removing all original and unpacked files, and the main returns to listening on the sqs input queue.
+
+From the above description of the functions you may notice that current implementation (function signatures and function implementations) with the exception of call to the multi-scan core, is very sqs centric, and adding support for non-sqs based scanning will require redesign. Essentially, we'd need to implement the abstract base class for abstracting common part of multi-scanning, modify current sqs function signatures and implementations to become concrete implementation of sqs based processing, and provide concrete implementation of the file system based scanning (functions specific to support file systems).
+By default, Python does not provide abstract classes. Python comes with a module that provides the base for defining abstract base classes which would allow us to implement such abstraction.
+The scope of this effort should be medium to large. However, once completed it should provide infrastructure for adding other forms of multi-scan support such as e.g., s3-s3, sqs-s3, s3-sqs, fs-s3, s3-fs, etc with a small effort.
+Thanks, and Regards,
+Mark

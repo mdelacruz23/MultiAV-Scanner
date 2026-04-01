@@ -1,0 +1,7 @@
+FROM apache/nifi:latest
+USER root
+RUN apt-get update 
+RUN apt-get install -y vim
+
+RUN mkdir  /var/scan
+EXPOSE 8443

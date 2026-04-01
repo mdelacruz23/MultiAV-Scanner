@@ -1,0 +1,274 @@
+#!/bin/sh
+
+#############################################################
+#
+# Copyright (C) 2020 McAfee, LLC.  All rights reserved.
+#
+# This script will uninstall uvscan.
+#
+#############################################################
+
+# Display usage for the script.
+# $1 - Script name
+display_usage()
+{
+    printf "Usage: $1 [uvscan_dir]\n"
+    printf "\n"
+    printf "  uvscan_dir      Directory in which uvscan is installed\n"
+    printf "\n"
+}
+
+# Displays error messages and quits.
+# $1 - optional error message.
+exit_error()
+{
+    [ -n "$1" ] && printf "$1\n"
+    printf "Uninstallation did not complete successfuly\n"
+    exit 1
+}
+
+
+# Remove a symbolic link only if its target is what we expect it to be.
+# $1 - Link file
+# $2 - Expected target
+# Exit status
+# 0 - All OK. Link removed.
+# 1 - Unable to remove link
+# 2 - link target not the expected file. Link not removed.
+remove_link()
+{
+    l_inode=`ls -iLd "$1" 2>/dev/null | awk '{ print $1}'`
+    t_inode=`ls -iLd "$2" 2>/dev/null | awk '{ print $1}'`
+    
+    status=0
+
+    if [ "$l_inode" = "$t_inode" ]
+    then
+        rm -f "$1" 2>/dev/null
+        [ $? -ne 0 ] && status=1
+    fi
+    
+    return $status
+}
+
+
+# Remove a file and all our links which reference it.
+# $1 - install directory
+# $2 - filename
+# $3 - list of mandatory links.
+# $4 - list of directories to contain links.
+# Exit Status
+# Number of files which could not be removed.
+uninstall_file()
+{
+    inst_file="$1/$2"
+    
+    n_notremoved=0
+    
+    # Make sure the file exists
+    [ ! -f "$inst_file" ] && return 0
+    
+    # Remove any links to the file inside the install directory.
+    if [ -n "$3" ]
+    then
+        for link in $3
+        do
+            remove_link "$1/$link" "$inst_file"
+            if [ $? -ne 0 ]
+            then
+                n_notremoved=`expr $n_notremoved + 1`
+                printf "Unable to remove link $1/$link\n"
+            fi
+        done
+    fi
+
+    # Remove any of our links outside of the install directory.
+    if [ -n "$4" ]
+    then
+        for link_dir in $4
+        do
+            # Remove the mandatory links to this link.
+            if [ -n "$3" ]
+            then
+                for link in $3
+                do
+                    remove_link "$link_dir/$link" "$inst_file"
+                    if [ $? -ne 0 ]
+                    then
+                        n_notremoved=`expr $n_notremoved + 1`
+                        printf "Unable to remove link $link_dir/$link\n"
+                    fi
+                done
+            fi
+
+            # Remove this link
+            remove_link "$link_dir/$2" "$inst_file"
+            if [ $? -ne 0 ]
+            then
+                n_notremoved=`expr $n_notremoved + 1`
+                printf "Unable to remove link $link_dir/$2\n"
+            fi
+        done
+    fi
+    
+    # Set its permissions
+    chmod 777 "$inst_file"
+
+    rm -f "$inst_file"
+    if [ $? -ne 0 ]
+    then
+        n_notremoved=`expr $n_notremoved + 1`
+        printf "Unable to remove file $inst_file\n"
+    fi
+    
+    return $n_notremoved
+}
+
+
+# Removes the installed files from a directory
+# $1 - Directory
+# $2.. Files to remove
+# Exit status
+# Number of files which could not be removed
+remove_files()
+{
+    exit_status=0
+    
+    install_dir=$1
+    shift 1
+    
+    for record in $@
+    do
+        fname=`echo $record | cut -d, -f1`
+        linkdirs=`echo $record | cut -d, -f2`
+        links=`echo $record | cut -d, -f3`
+        
+        if [ -n "$fname" ]
+        then
+            uninstall_file "$install_dir" "$fname" "$links" "$linkdirs"
+            exit_status=`expr $exit_status + $?`
+        fi
+    done
+
+    return $exit_status
+}
+
+# Remove all . and .. entries from either $1 or the directory the script was
+# ran from if $1 was not set. Assign the result to $uvscan_dir
+dir=${1:-`dirname $0`}
+[ ! -d "$dir" ] && exit_error "$dir is not a directory"
+
+uvscan_dir=`(cd $dir ; pwd -P)`
+
+# Determine the platform and set library name if required
+PLATFORM=`uname -s`
+export PLATFORM
+
+libfiles=""
+
+case $PLATFORM in
+    "SunOS")                    # Solaris
+        # The library name will vary depending on the version of uvscan, so
+        # read it from uvscan's dependancies.
+        libraryname="libsunfv.so.4"
+        ;;
+    "HP-UX")                    # HP-UX
+        case `uname -r | cut -c-4` in
+            "B.10")             # A platform we do not support.
+                    unset PLATFORM
+                    ;;
+            *)      libraryname="libhpxfv.4"
+                    linkname="libhpxfv.sl"
+                    ;;
+        esac
+        ;;
+    "Linux")                    # Linux
+        linkname="liblnxfv.so"
+        libraryname="$linkname.4"
+        ;;
+    "FreeBSD")                  # FreeBSD
+        libraryname="libbsdfv.so.4"
+        linkname="libbsdfv.so"
+        ;;
+    "AIX")                      # AIX
+        libraryname="libaixfv.a"
+        linkname=""
+        libfiles="
+        libstdc++.a,
+        libgcc_s.a,
+        uvscancore,"
+        ;;
+    *)                          # A platform we do not support.
+        unset PLATFORM
+        ;;
+esac
+
+[ -z "$PLATFORM" ] && exit_error "Unknown platform. Unable to uninstall."
+
+
+# 
+#  Check if we are on linux 64, in which case add 64 to lib directory.
+#
+suffix64=""
+if [ $PLATFORM = "Linux" ]
+then
+    # Output from file ./uvscan ...
+    # ./uvscan: ELF 64-bit LSB executable, AMD x86-64, version 1 (SYSV), for GNU/Linux 2.6.4, dynamically linked (uses shared libs), for GNU/Linux 2.6.4, stripped
+    #  
+    echo $uvscan_dir/uvscan
+    test64=`file $uvscan_dir/uvscan | awk '{ print $3 }' | cut -c-2`
+    if [ $test64 = "64" ]
+    then
+    suffix64="64"
+    fi
+fi
+
+
+
+allfiles="
+uvscan,/usr/local/bin
+uvscan_secure,/usr/local/bin
+$libraryname,/usr/local/lib${suffix64},$linkname
+avvscan.dat,
+avvnames.dat,
+avvclean.dat,
+config.dat,
+license.dat,
+runtime.dat,
+readme.txt,
+vscl615upg.pdf,
+license.txt,
+signlic.txt,
+uvscan.1,/usr/local/man/man1,
+$libfiles"
+
+
+# If there is more than one argument, complain.
+if [ $# -gt 1 ]
+then
+    display_usage `basename $0`
+    exit_error
+fi
+
+
+unset answer
+while [ -z "$answer" ]
+do
+    printf "Are you sure you want to remove uvscan from $uvscan_dir [y]/n "
+    read answer
+
+    answer=`echo "${answer:-"y"}" | cut -c1 | tr [:upper:] [:lower:]`
+
+    [ "$answer" != "n" -a "$answer" != "y" ] && unset answer
+done
+
+if [ "$answer" = "y" ]
+then
+    remove_files "$uvscan_dir" $allfiles
+    not_removed=$?
+    if [ $not_removed -gt 0 ]
+    then
+        exit_error "$not_removed file(s) were not removed"
+    fi
+fi
+

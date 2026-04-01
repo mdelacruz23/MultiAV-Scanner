@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#############################################################
+#
+# Copyright (C) 2009 McAfee, Inc.  All rights reserved.
+#
+# This script will run uvscan with the --secure switch in
+# addition to any other parameters passed in.
+#
+#############################################################
+
+uvscan_binary="`dirname $0`/uvscan"
+"$uvscan_binary" --secure $@
+
+exit $?

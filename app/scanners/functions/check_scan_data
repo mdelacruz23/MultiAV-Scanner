@@ -1,0 +1,75 @@
+#!/bin/bash
+# set -x
+source /app/scanners/commons/get_instance_id.sh
+
+# Background: It is possible that uvscan can enter an infinite loop while 
+# scanning files and prevent scanning to complete (GAPMVMNT-325). 
+# That is intermittent condition, however it needs to be handled as such spining will
+# continue indefinitely and block all further scanning.
+# This script tries to detect McAfee uvscan spinning in infinite loop and restarts scanning  procedure.
+# Spin detection is based on current uvscan uptime and predicted aproximate max scan time.
+# When spin condition is detected we need to restart both uvscan AND multiav_s3_scanner. 
+
+LOG_DIR="/var/log/multiav/"
+INSTANCE=$(get_instance_id)
+LOG_FILE="scan_data-"
+LOG_PATH="$LOG_DIR$LOG_FILE$INSTANCE"".log"
+
+convertSeconds() {
+ 
+    local totalSeconds=$1;
+    local seconds=$((totalSeconds%60));
+    local minutes=$((totalSeconds/60%60));
+    local hours=$((totalSeconds/60/60%24));
+    (( $hours > 0 )) && printf '%d hr ' $hours;
+    (( $minutes > 0 )) && printf '%d min ' $minutes;
+    (($hours > 0 || $minutes > 0 )) && printf ' ';
+    printf '%d sec\n' $seconds;
+}
+
+
+uptime=`ps -C uvscan -o etimes=`
+if [[ -z $uptime ]]
+then
+    uptime=0
+fi
+# Get total size of current scanned batch in MB
+if [ -d "/tmp/s3_scan" ]
+then
+    totals3=`du /tmp/s3_scan --max-depth=0 -ms 2>/dev/null`
+    totals3=`echo $totals3 | awk '{print $1}' 2>/dev/null`
+fi
+if [ -d "/tmp/fs_scan" ] 
+then
+    totalfs=`du /tmp/fs_scan --max-depth=0 -ms 2>/dev/null`
+    totalfs=`echo $totalfs | awk '{print $1}' 2>/dev/null`
+fi
+total=$((totals3 + totalfs))
+# Max estimated time. The actual scanning time should be much shorted.
+# This is the worst case scenario that would trigger reset of scanners 
+predicted_time=$(( total * 9 + 120 )) 
+let total=total*1024*1024
+ftotal_size=`numfmt --to iec --padding=-8 --suffix=B ${total}`
+fpredicted_time=$(convertSeconds ${predicted_time})
+fuptime=$(convertSeconds ${uptime})
+if [[ $total -eq 0 ]]; then
+    echo -n "$(date) " >> $LOG_PATH
+    echo "scanning: ${ftotal_size} MC scan time: ${fuptime} -- Max scan time: 0" | tee -a $LOG_PATH
+ else
+    echo -n "$(date) " >> $LOG_PATH
+    echo "scanning: ${ftotal_size} MC scan time: ${fuptime} -- Max scan time: ${fpredicted_time}" | tee -a  $LOG_PATH
+fi
+echo "uptime: ${uptime} predicted: ${fpredicted_time}"
+if [[ $uptime -gt $predicted_time ]]
+then
+    echo -n "$(date) " >> $LOG_PATH
+    echo "MC scan time: ${fuptime} exceeded max time ${fpredicted_time} for: ${ftotal_size}" | tee -a $LOG_PATH
+    scan_dirs=`du /tmp/s3_scan -mc`
+    echo "Scanning dirs ${scan_dirs}" >> $LOG_PATH
+    pkill -f multiav_s3_scanner
+    pkill -f multiav_fs_scanner
+    pkill uvscan
+    exit 1
+fi
+exit 0
+

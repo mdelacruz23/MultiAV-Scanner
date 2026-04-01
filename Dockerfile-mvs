@@ -1,0 +1,126 @@
+FROM python:3.11.2
+USER root
+COPY ./app /app
+COPY Pipfile Pipfile.lock
+#test trigger pipeline
+COPY /app/clamav/clamd.conf /usr/local/etc/clamd.conf
+COPY /app/clamav/freshclam.conf /usr/local/etc/freshclam.conf
+# By dedault virus definition defs are downloaded from the local server repository
+ENV LOCAL_DEFS=true
+# added group/user clamav for auto installation of clamav engine
+# RUN groupadd clamav && \
+#RUN groupadd clamav
+#RUN useradd -rm -d /home/clamav -s /bin/bash -g clamav -G root -u 1001 clamav && \
+RUN useradd clamav && \
+    apt-get update && \
+    apt-get -y upgrade && \
+    apt-get install -y vim atop unzip p7zip-full unace unalz lhasa arc rzip dnsutils sudo 
+# Create ubuntu user with sudo privileges
+RUN usermod -aG root clamav
+RUN echo 'clamav ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+# RUN useradd -ou 0 -g 0 -ms /bin/bash mvs 
+RUN groupadd -g 1002 mvs 
+RUN groupadd -g 990 sophos-spl-group
+RUN useradd -rm -d /home/mvs -s /bin/bash -g mvs -u 1002 mvs 
+RUN usermod -aG sophos-spl-group mvs
+# disable sudo password
+RUN echo 'mvs ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN mkdir -p /home/mvs/.aws && \
+    chown mvs:mvs /home/mvs/.aws
+
+RUN mkdir -p -v /var/lib/clamav && \
+    mkdir -p -v /var/run/clamav && \
+    mkdir -p -v /var/run/mvs && \
+    mkdir -p -v /var/log/mvs && \
+    chown mvs:mvs /var/run/mvs && \
+    chown mvs:mvs /var/run/clamav && \
+    chown mvs:mvs /var/log/mvs && \
+    chown mvs:mvs /usr/local/etc/clamd.conf && \
+    chown mvs:mvs /usr/local/etc/freshclam.conf
+
+#Install clam av library dependencies
+RUN apt-get update
+RUN apt-get install -y cron wget ftp openssl libssl-dev libcurl4-openssl-dev zlib1g-dev libpng-dev libxml2-dev libjson-c-dev libbz2-dev libpcre3-dev ncurses-dev logrotate
+RUN apt-get install -y --no-install-recommends \
+    libcap2 libpcre3 libstdc++6 ca-certificates procps && \
+    rm -rf /var/lib/apt/lists/*
+RUN curl -LO https://www.clamav.net/downloads/production/clamav-1.4.2.linux.x86_64.deb
+RUN dpkg -i clamav-1.4.2.linux.x86_64.deb && \
+   mkdir -p -v /usr/local/share/clamav && \
+   # mkdir -p -v /srv/mvs-log/clamav && \
+   # mkdir -p -v /srv/mvs-log/mcafee && \
+   mkdir -p -v /srv/mvs-log2/clamav && \
+   mkdir -p -v /srv/mvs-log2/mcafee && \
+   mkdir -p -v /var/log/mvs/clamav && \ 
+   mkdir -p -v /var/log/mvs/mcafee && \
+   cp /app/etc/logrotate.conf /etc/logrotate.conf
+
+ADD app/cron.d/crontab /etc/cron.d/multiav-cron
+RUN chmod 0644 /etc/cron.d/multiav-cron && \
+    crontab -u mvs /etc/cron.d/multiav-cron && \
+    mkdir -p /root/.aws  && \
+    mkdir -p /var/opt/uvscan_engine && \
+    chown mvs:mvs /var/opt/uvscan_engine && \
+    mkdir -p /var/opt/clamav_engine && \
+    chown mvs:mvs /var/opt/clamav_engine && \
+    echo "set mouse-=a" > ~/.vimrc && \
+    touch /var/log/main_switch.log && \
+    chown mvs:mvs /var/log/main_switch.log
+
+#Install resource monitor
+RUN printf "%s\n" "deb http://archive.debian.org/debian buster-backports main contrib non-free" | tee /etc/apt/sources.list.d/buster-backports.list
+RUN printf "%s\n" "deb http://deb.debian.org/debian bullseye main" \
+           "deb http://deb.debian.org/debian-security bullseye-security main" \
+           "deb http://deb.debian.org/debian bullseye-updates main" | tee /etc/apt/sources.list
+RUN apt-get update && apt-get install -y -t buster-backports monit
+RUN chmod 0600 /etc/monit/monitrc && \
+    chown -R mvs:mvs /etc/monit && \
+    chown -R mvs:mvs /app/uvscan
+
+RUN chmod 775 /run && \
+    chown -R mvs:mvs /var/log && \
+    chmod -R 664 /var/log/mvs && \
+    chmod 644 /usr/local/etc/clamd.conf && \
+    chmod 755 /app/daemons/clamav_engine_daemon.sh && \
+    chmod 664 /app/clamav/freshclam_updater.py && \
+    chmod 664 /app/uvscan/uvscan_updater.py && \
+    chmod 664 /app/uvscan/uvscan_engine_updater.py && \
+    chmod 664 /app/clamav/clamav_engine_updater.py && \
+    chmod 664 /app/scanners/multiav_s3_scanner.py && \
+    chmod 775 /usr/local/sbin && \
+    chown mvs:mvs /usr/local/sbin && \
+    chown mvs:mvs /usr/local/share/clamav && \
+    chown mvs:mvs /var/lib/clamav && \
+    mkdir -p -v /run/clamav && \
+    mkdir -p -v /run/mvs && \
+    chown mvs:mvs /run/clamav && \
+    chown mvs:mvs /run/mvs && \
+    chown mvs:mvs /app/cleanup_tmp.sh && \
+    cp /app/etc/logrotate.d/monit.conf /etc/logrotate.d/monit
+
+
+# Set default user
+
+USER mvs
+ENV PATH="/home/mvs/.local/bin:${PATH}"
+
+RUN pip install pipenv && \
+    pip install cffi && \
+    pip install boto3 && \
+    pip install pytz  && \
+    pip install datadog && \
+    pip install pyclamd && \
+    pip install clamd && \
+    pip install configparse && \
+    pip install pyunpack && \
+    pip install patool && \
+    pip install python-magic && \
+    pip install kafka-python && \
+    pip install watchdog && \
+    pip install retrying
+
+CMD   /app/set_env.sh && \
+      /app/main_switch.sh && \
+      monit -d 60 -Ic /etc/monit/monitrc
+EXPOSE 8009 2812 2820
+

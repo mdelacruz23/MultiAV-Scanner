@@ -1,0 +1,19 @@
+# The GAP BIA containerized MVS
+# WARNING: Ensure that SQS input queue path and its name corresponds to MVS deployment instance !!!!
+[Unit]
+Description=containerized multi-virus scanner service
+# After=network.target local-fs.target containerd.service
+After=network.target local-fs.target 
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=mark.ginalski
+ExecStart=/usr/bin/auto-scan-service start -l -i multiscan-auto-large-pro-input-s3-events
+RemainAfterExit=yes
+ExecStop= /usr/bin/auto-scan-service stop
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,123 @@
+project:
+  name: mvs
+  namespace: multiav-scan-aws-ec2-objects
+
+replicaCount: 5
+
+image:
+  repository: "registry.jadeuc.com/gap/dune/multiav-scan-aws-ec2-objects"
+  tag: "8.1.9"
+
+  pullPolicy: "Always"
+
+service:
+  serviceName: mvs-ip-service
+  port1: 2812
+  name1: "2812"
+  port2: 8009
+  name2: "8009"
+  port3: 2820
+  name3: "2820"
+  type: ClusterIP
+
+ 
+env:
+  AWS_CERT_VERIFY: "False"
+  MY_NAME: "MVS-service"
+  SCAN_HOST_NAME: $(MY_POD_IP)
+  ACCOUNT_ID: ""
+  INPUT_SQS_PATH: "" 
+  OUTPUT_SQS_PATH: ""
+  SQS_URI: "https://sqs.us-east-1.amazonaws.com/"
+  SQS_PATH: "https://sqs.us-east-1.amazonaws.com/"
+  AWS_DEFAULT_REGION: "us-east-1"
+  AWS_TLS_CA_BUNDLE: "None"
+  INFECTED_BUCKET: "data-multiscan-infected"
+  ENGINE_UPDATES: "false"
+  FS_SCANNERS: "false"
+  FS_INPUT_DIR_PATH: "/var/scan/input"
+  FS_OUTPUT_DIR_PATH: "/var/scan/output"
+  FS_INFECTED_PATH: "/var/scan/infected"
+  LOCAL_DEFS: "true"
+  DEFS_BUCKET: "data-vs-definitions"
+  DEFS_URI: "https://s3.us-east-1.amazonaws.com/"
+  DEFS_PREFIX: "scanners_defs"
+  BATCH_SIZE: "10" 
+  
+
+resources:
+  limits:
+    cpu: '8'
+    memory: 8Gi
+  requests:
+    cpu: '4'
+    memory: 4Gi
+
+ingress:
+  enabled: true
+  annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  className: "nginx"
+  pathtype: ImplementationSpecific
+  hostUrl: monit-gap.itss.jadeuc.com
+  hosts:
+    - host: monit-gap.itss.jadeuc.com
+      paths:
+        - path: /
+  tls: []
+
+##### START VSS Mapped Values #####
+app:
+  namespace: multiav-scan-aws-ec2-objects
+vss:
+  enabled: true
+  vssMap:
+  - name: aws-key
+    secretMount: gap
+    path: "data/multiav-scan-aws-ec2-objects/aws-secrets"
+    createSecretName: accesskeyid
+  - name: aws-secret
+    secretMount: gap
+    path: "data/multiav-scan-aws-ec2-objects/aws-secrets"
+    createSecretName: secretaccesskey
+##### END VSS Mapped Values #####
+
+aws:
+  region: "us-east-1"
+  
+securityContext:
+  privileged: false
+  runAsGroup: 1002
+  runAsUser: 1002
+
+imagePullSecrets:
+  - name: gitlab-access-token
+
+persistence:
+  enabled: true
+  createStorageClass: false          # <-- don't create SC; team provides it
+  storageClassName: aws-efs    # <-- put the exact StorageClass name
+  size: 300Gi
+  accessModes:
+    - ReadWriteMany
+  existingClaim: ""                  # or set to an existing PVC name to skip creating one
+  mountPath: /var/log
+
+DeleteFiles:
+  name: delete-script
+  cronjob:
+    name: mvs-delete-files-cronjob1
+    schedule: "0 0 * * *"
+  image:
+    repository: "registry.jadeuc.com/gap/dune/multiav-scan-aws-ec2-objects/ubuntu"
+    tag: "22.04" 
+    restartPolicy: "OnFailure"
+  script:
+    name: "mvs-delete-files.sh"
+  volumeMounts:
+    - mountPath: /mvs-scan-dir0
+      name: pvc-volume0
+    - mountPath: /mvs-scan-dir1
+      name: pvc-volume1
+

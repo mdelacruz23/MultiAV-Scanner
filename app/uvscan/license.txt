@@ -1,0 +1,420 @@
+ End User License Agreement
+
+NOTICE TO ALL USERS: PLEASE READ THIS CONTRACT CAREFULLY.  
+BY CLICKING THE ACCEPT BUTTON OR INSTALLING THE SOFTWARE, 
+YOU (EITHER AN INDIVIDUAL OR A SINGLE ENTITY) AGREE THAT 
+THIS AGREEMENT IS ENFORCEABLE LIKE ANY WRITTEN CONTRACT 
+SIGNED BY YOU.  IF YOU DO NOT AGREE TO ALL THE TERMS OF THIS 
+AGREEMENT, CLICK ON THE BUTTON THAT INDICATES THAT YOU DO 
+NOT ACCEPT THE TERMS OF THIS CONTRACT AND DO NOT INSTALL THE 
+SOFTWARE.
+
+1. Definitions.
+a. "Software" means (a) all of the contents of the files, 
+disk(s), CD-ROM(s) or other media (including electronic 
+media) with which this Agreement is provided or such 
+contents as are hosted by McAfee or its distributors, 
+resellers, OEM/MSP partners, or other business partners 
+(collectively "Authorized Partner(s)"), including but not 
+limited to (i) McAfee or third party computer information or 
+software; (ii) related explanatory materials in printed, 
+electronic, or online form ("Documentation"); and (b) 
+upgrades, modified or subsequent versions and updates 
+including any virus or vulnerability updates (collectively 
+"Updates"), and Software, if any, licensed to you by McAfee 
+or an Authorized Partner as part of a maintenance contract 
+or service subscription.
+b. "Use" or "Using" means to access, install, download, copy 
+or otherwise benefit from using the Software.
+c. "Permitted Number" means one (1) unless otherwise 
+indicated under a valid license (e.g., volume license) 
+granted by McAfee.
+d. "Computer" means a device that accepts information in 
+digital or similar form and manipulates it for a specific 
+result based upon a sequence of instructions.
+e. "McAfee" means (a) McAfee, Inc., a Delaware corporation, 
+with offices located at 3965 Freedom Circle, Santa Clara, 
+California 95054, USA if the Software is purchased in the 
+United States, Mexico, Central America, South America, or 
+the Caribbean; (b) McAfee Ireland Limited, with offices 
+located at 11 Eastgate Business Park, Little Island, Cork, 
+Ireland if the Software is purchased in Canada, Europe, the 
+Middle East, Africa, Asia, or the Pacific Rim; and (c) 
+McAfee Co., Ltd. with offices located at Shibuya Mark City 
+West Building 12-1, Dogenzaka 1-Chrome, Shibuya-ku, Tokyo 
+150-0043, Japan if the Software is purchased in Japan.
+
+2. License Grant.  Subject to the payment of the applicable 
+license fees (where applicable), and subject to the terms 
+and conditions of this Agreement, McAfee hereby grants to 
+you a non-exclusive, non-transferable license to Use the 
+Software subject to any restrictions or usage terms 
+specified on the applicable price list, purchase agreement, 
+and product packaging included as part of the Documentation. 
+ Some third party materials included in the Software may be 
+subject to other terms and conditions, which are typically 
+found in a "Read Me" file or "About" file in the Software.
+
+3. Term.  This Agreement is effective for the term set forth 
+in the purchase order issued by you and which is accepted by 
+McAfee or, alternatively, as set forth in the product order 
+form issued by McAfee (the "Term").  If you issue a purchase 
+order to an Authorized Partner and the terms and conditions 
+as set forth in the license grant letter issued by McAfee or 
+included in the Documentation conflicts with the terms and 
+conditions included in the purchase order, then the terms 
+and conditions specified in the grant letter or 
+Documentation shall control.  Except for Evaluation 
+Software, Beta Software or freeware which is subject to 
+Section 7 below, if no Term is included in the above 
+described materials, then the Term shall be for one (1) year 
+from the date of purchase unless earlier terminated as set 
+forth herein.  This Agreement will terminate automatically 
+if you fail to comply with any of the limitations or other 
+requirements described herein.  Upon any termination or 
+expiration of this Agreement, you must cease use of the 
+Software and destroy all copies of the Software and the 
+Documentation.
+
+4. Updates.  This license is limited to the version of the 
+Software delivered by McAfee and does not include Updates, 
+unless a separate maintenance contract is purchased or, 
+alternatively, you have purchased a service subscription 
+that entitles you to Updates as described in the 
+Documentation.  After the specified maintenance period or 
+service subscription period has expired, you have no further 
+rights to receive any Updates without purchase of a new 
+license to the Software.
+
+5. Ownership Rights.  The Software is protected by United 
+States' and other copyright laws, international treaty 
+provisions and other applicable laws in the country in which 
+it is being used.  McAfee and its suppliers own and retain 
+all right, title and interest in and to the Software, 
+including all copyrights, patents, trade secret rights, 
+trademarks and other intellectual property rights therein.  
+Your possession, installation, or use of the Software does 
+not transfer to you any title to the intellectual property 
+in the Software, and you will not acquire any rights to the 
+Software except as expressly set forth in this Agreement.  
+Any copy of the Software and Documentation authorized to be 
+made hereunder must contain the same proprietary notices 
+that appear on and in the Software and Documentation.
+
+6. Multiple Environment Software/Multiple Language 
+Software/Dual Media Software/Multiple 
+Copies/Bundles/Updates.  If the Software supports multiple 
+platforms or languages, if you receive the Software on 
+multiple media, if you otherwise receive multiple copies of 
+the Software, or if you receive the Software bundled with 
+other software, the total number of your Computers on which 
+all versions of the Software is installed may not exceed the 
+Permitted Number.  If the Software is an Update to a 
+previous version of the Software, you must possess a valid 
+license to such previous version in order to Use the Update. 
+ You may continue to Use the previous version of the 
+Software on your Computer after you receive the Update to 
+assist you in the transition to the Update, provided that 
+the Update and the previous version are installed on the 
+same Computer; the previous version or copies thereof are 
+not transferred to another Computer unless all copies of the 
+Update are also transferred to such Computer, and you 
+acknowledge that any obligation McAfee may have to support 
+the previous version of the Software ends upon availability 
+of the Update.
+
+7. Evaluation Product Additional Terms.  If the product you 
+have received with this license has been identified as 
+"Evaluation" Software, "Beta" Software or freeware, then the 
+provisions of this section apply.  To the extent that any 
+provision in this section is in conflict with any other term 
+or condition in this Agreement, this section shall supercede 
+such other term(s) and condition(s) with respect to the 
+Evaluation Software, Beta Software, or freeware, but only to 
+the extent necessary to resolve the conflict.  You 
+acknowledge that the Evaluation Software, Beta Software or 
+freeware may contain bugs, errors and other problems that 
+could cause system or other failures and data loss.  
+Consequently, Evaluation Software, Beta Software, or 
+freeware is provided to you "AS-IS", and McAfee disclaims 
+any warranty or liability obligations to you of any kind.  
+WHERE LEGAL LIABILITY CANNOT BE EXCLUDED, BUT MAY BE 
+LIMITED, MCAFEE'S LIABILITY AND THAT OF ITS SUPPLIERS AND 
+AUTHORIZED PARTNERS SHALL BE LIMITED TO THE SUM OF FIFTY 
+DOLLARS (U.S. $50) IN TOTAL.  You acknowledge that McAfee 
+has not promised or guaranteed to you that freeware or Beta 
+Software will be announced or made available to anyone in 
+the future that McAfee has no express or implied obligation 
+to you to announce or introduce the Beta Software, and that 
+McAfee may not introduce a product similar to or compatible 
+with the Beta Software.  Accordingly, you acknowledge that 
+any research or development that you perform regarding the 
+Beta Software or any product associated with the Beta 
+Software is done entirely at your own risk.  During the term 
+of this Agreement, if requested by McAfee, you will provide 
+feedback to McAfee regarding testing and use of the Beta 
+Software, including error or bug reports; you agree to grant 
+McAfee a perpetual, non-exclusive, royalty-free, worldwide 
+license to use, copy, distribute, make derivative works and 
+incorporate the feedback into any McAfee product at McAfee's 
+sole discretion.  If you have been provided the Beta 
+Software pursuant to a separate written agreement, your use 
+of the Beta Software is also governed by such agreement.  
+Upon receipt of a later unreleased version of the Beta 
+Software or release by McAfee of a publicly released 
+commercial version of the Beta Software, whether as a 
+stand-alone product or as part of a larger product, you 
+agree to return or destroy all earlier Beta Software 
+received from McAfee and to abide by the terms of the End 
+User License Agreement for any such later versions of the 
+Beta Software.  Your Use of the Evaluation or Beta Software 
+is limited to 90 days and use of freeware is available for 
+only so long as McAfee makes the freeware available unless 
+otherwise agreed to in writing by McAfee.  McAfee is under 
+no obligation to continue providing freeware or to update 
+such freeware.
+
+8. Restrictions.  You may not sell, lease, license, rent, 
+loan, resell or otherwise transfer, with or without 
+consideration, the Software.  If you enter into a contract 
+with a third party in which the third party manages your 
+information technology resources ("Managing Party"), you may 
+transfer all your rights to Use the Software to such 
+Managing Party, provided that (a) the Managing Party only 
+Uses the Software for your internal operations and not for 
+the benefit of another third party; (b) the Managing Party 
+agrees to comply with the terms and conditions of this 
+Agreement, and (c) you provide McAfee with written notice 
+that a Managing Party will be Using the Software on your 
+behalf.  You may not permit third parties to benefit from 
+the use or functionality of the Software via a timesharing, 
+service bureau or other arrangement.  You may not reverse 
+engineer, decompile, or disassemble the Software, except to 
+the extent the foregoing restriction is expressly prohibited 
+by applicable law.  You may not modify, or create derivative 
+works based upon, the Software in whole or in part.  You may 
+not copy the Software or Documentation except as expressly 
+permitted in Section 1 above.  You may not remove any 
+proprietary notices or labels on the Software.  All rights 
+not expressly set forth hereunder are reserved by McAfee.
+
+9. Warranty and Disclaimer.
+a. Limited Warranty.  McAfee warrants that for sixty (60) 
+days from the date of original purchase the media (e.g., CD 
+ROM), if any, on which the Software is contained and 
+provided to you will be free from defects in materials and 
+workmanship.
+b. Customer Remedies.  McAfee's and its suppliers' entire 
+liability and your exclusive remedy for any breach of the 
+foregoing warranty shall be, at McAfee's option, either (i) 
+return of the purchase price you paid for the license, or 
+(ii) replacement of the defective media in which the 
+Software is contained.  You must return the defective media 
+to McAfee at your expense with a copy of your receipt.  This 
+limited warranty is void if the defect has resulted from 
+accident, abuse, or misapplication.  Any replacement media 
+will be warranted for the remainder of the original warranty 
+period.  Outside the United States, this remedy is not 
+available to the extent McAfee is subject to restrictions 
+under United States export control laws and regulations.
+c. Warranty Disclaimer.  Except for the limited warranty set 
+forth herein, THE SOFTWARE IS PROVIDED "AS IS" AND MCAFEE 
+MAKES NO WARRANTY AS TO ITS USE OR PERFORMANCE.  EXCEPT FOR 
+ANY WARRANTY, CONDITION, REPRESENTATION OR TERM THE EXTENT 
+TO WHICH CANNOT BE EXCLUDED OR LIMITED BY APPLICABLE LAW.  
+MCAFEE, ITS SUPPLIERS AND AUTHORIZED PATNERS MAKE NO 
+WARRANTY, CONDITION, REPRESENTATION, OR TERM (EXPRESS OR 
+IMPLIED, WHETHER BY STATUTE, COMMON LAW, CUSTOM, USAGE OR 
+OTHERWISE) AS TO ANY MATTER INCLUDING, WITHOUT LIMITATION, 
+NONINFRINGEMENT OF THIRD PARTY RIGHTS, MERCHANTABILITY, 
+SATISFACTORY QUALITY, INTEGRATION, OR FITNESS FOR A 
+PARTICULAR PURPOSE.  YOU ASSUME RESPONSIBILITY FOR SELECTING 
+THE SOFTWARE TO ACHIEVE YOUR INTENDED RESULTS, AND FOR THE 
+INSTALLATION OF, USE OF, AND RESULTS OBTAINED FROM THE 
+SOFTWARE.  WITHOUT LIMITING THE FOREGOING PROVISIONS, MCAFEE 
+MAKES NO WARRANTY THAT THE SOFTWARE WILL BE ERROR-FREE OR 
+FREE FROM INTERRUPTIONS OR OTHER FAILURES OR THAT THE 
+SOFTWARE WILL MEET YOUR REQUIREMENTS.
+
+10. Limitation of Liability.  UNDER NO CIRCUMSTANCES AND 
+UNDER NO LEGAL THEORY, WHETHER IN TORT, CONTRACT, OR 
+OTHERWISE, SHALL MCAFEE OR ITS AUTHORIZED PARTNERS OR 
+SUPPLIERS BE LIABLE TO YOU OR TO ANY OTHER PERSON FOR LOSS 
+OF PROFITS, LOSS OF GOODWILL OR ANY INDIRECT, SPECIAL, 
+INCIDENTAL, OR CONSEQUENTIAL DAMAGES OR DAMAGES FOR GROSS 
+NEGLIGENCE OF ANY CHARACTER INCLUDING, WITHOUT LIMITATION, 
+DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE, COMPUTER 
+FAILURE OR MALFUNCTION, OR FOR ANY OTHER DAMAGE OR LOSS.  IN 
+NO EVENT SHALL MCAFEE OR ITS AUTHORIZED PARTNERS OR 
+SUPPLIERS BE LIABLE FOR ANY DAMAGE IN EXCESS OF THE PRICE 
+PAID FOR THE SOFTWARE, IF ANY, EVEN IF MCAFEE OR ITS 
+AUTHORIZED PARTNERS OR SUPPLIERS SHALL HAVE BEEN ADVISED OF 
+THE POSSIBILITY OF SUCH DAMAGES.  This limitation shall not 
+apply to liability for death or personal injury to the 
+extent that applicable law prohibits such limitation.  
+Furthermore, some jurisdictions do not allow the exclusion 
+or limitation of incidental or consequential damages, so 
+this limitation and exclusion may not apply to you.  Nothing 
+contained in this Agreement limits McAfee's liability to you 
+for McAfee's negligence or for the tort of fraud.  McAfee is 
+acting on behalf of its suppliers and Authorized Partners 
+for the purpose of disclaiming, excluding and/or limiting 
+obligations, warranties and liability as provided in this 
+Agreement, but in no other respects and for no other 
+purpose.  The foregoing provisions shall be enforceable to 
+the maximum extent permitted by applicable law.
+
+11. Notice to United States Government End Users.  The 
+Software and accompanying Documentation are deemed to be 
+"commercial computer software" and "commercial computer 
+software documentation," respectively, pursuant to DFAR 
+Section 227.7202 and FAR Section 12.212, as applicable.  Any 
+use, modification, reproduction, release, performance, 
+display or disclosure of the Software and accompanying 
+Documentation by the United States Government shall be 
+governed solely by the terms of this Agreement and shall be 
+prohibited except to the extent expressly permitted by the 
+terms of this Agreement.
+
+12. Export Controls.  You acknowledge that the Software is 
+subject to the export control laws and regulations of the 
+United State of America ("US"), and any amendments thereof. 
+ You shall not export or re-export the Software, directly or 
+indirectly, to (i) any countries that are subject to US 
+export restrictions (currently including, but not 
+necessarily limited to, Cuba, Iran, Libya, North Korea, 
+Sudan, and Syria); (ii) any end user known, or having reason 
+to be known, will utilize them in the design, development or 
+production of nuclear, chemical or biological weapons; or 
+(iii) any end user who has been prohibited from 
+participating in the US export transactions by any federal 
+agency of the US government.  You further acknowledge that 
+Software may include technical data subject to export and 
+re-export restrictions imposed by US law.
+
+13. High Risk Activities.  The Software is not 
+fault-tolerant and is not designed or intended for use in 
+hazardous environments requiring fail-safe performance, 
+including without limitation, in the operation of nuclear 
+facilities, aircraft navigation or communication systems, 
+air traffic control, weapons systems, direct life-support 
+machines, or any other application in which the failure of 
+the Software could lead directly to death, personal injury, 
+or severe physical or property damage (collectively, "High 
+Risk Activities").  MCAFEE EXPRESSLY DISCLAIMS ANY EXPRESS 
+OR IMPLIED WARRANTY OF FITNESS FOR HIGH RISK ACTIVITIES.
+
+14. Governing Law.  This Agreement will be governed by and 
+construed in accordance with the substantive laws in force: 
+(a) in the State of New York, if you purchased the Software 
+in the United States, Mexico, Central America, South 
+America, or the Caribbean;  (b) in the Republic of Ireland, 
+if you purchased the Software in Canada, Europe, Middle 
+East, Africa, Asia, or the region commonly referred to as 
+the Pacific Rim; and (c) in Japan if you purchased the 
+Software in Japan.  If you purchased the Software in any 
+other country, then the substantive laws of the Republic of 
+Ireland shall apply, unless another local law is required to 
+be applied.  This Agreement will not be governed by the 
+conflict of laws rules of any jurisdiction or the United 
+Nations Convention on Contracts for the International Sale 
+of Goods, the application of which is expressly excluded.  
+The United States District Court for the Southern District 
+of New York, and the Courts of New York County, New York, 
+when New York law applies, the courts of the Republic of 
+Ireland, when the law of Ireland applies,  and the courts of 
+Japan when Japanese law applies, shall each have 
+non-exclusive jurisdiction over all disputes relating to 
+this Agreement.
+
+15. Free Software.  This product includes or may include 
+some software programs that are licensed (or sublicensed) to 
+the user under the GNU General Public License (GPL) or other 
+similar software licenses which, among other rights, permit 
+the user to copy, modify and redistribute certain programs, 
+or portions thereof, and have access to the source code.  
+The GPL requires that for any software covered under the 
+GPL, which is distributed to someone in an executable binary 
+format that the source code also be made available to those 
+users.  For any such software, the source code is made 
+available in a designated directory created by installation 
+of the Software or designated internet page.  If any Free 
+Software licenses require that McAfee provide rights to use, 
+copy or modify a software program that are broader than the 
+rights granted in this agreement, then such rights shall 
+take precedence over the rights and restrictions herein.
+
+16. Privacy.  By entering into this Agreement, you agree 
+that the McAfee privacy policy, as it exists at any relevant 
+time, shall be applicable to you. The most current privacy 
+policy can be found on the McAfee web site (www.McAfee.com). 
+By entering into this Agreement, you agree to the transfer 
+of your personal information to McAfee's offices in the 
+United States and other countries outside of your own.
+
+17. Collection of Certain System Information.  McAfee 
+employs certain applications and tools through its website 
+and within the McAfee Software, to retrieve information 
+about your computer system to assist us in the provision and 
+support of Software that you have chosen to subscribe to or 
+use. This information is essential to enable us to provide 
+you with quality service and up to the minute threat 
+protection; and for these reasons, there is no opt-out 
+available for this information collection.
+
+18. Audit.  McAfee may, at its expense and upon reasonable 
+notice to you, perform an audit of your compliance with the 
+terms of this Agreement.  You understand and acknowledge 
+that McAfee utilizes a number of methods to verify and 
+support the McAfee Software licensed for use by its 
+customers.  These methods may include technological features 
+to prevent unauthorized use of the McAfee Software and to 
+automatically report information about -- and verification 
+of -- your deployment of McAfee Software.  The information 
+reported back to McAfee can also include:  other McAfee 
+products; other Software installed with or used by 
+components of the McAfee Software; and  third-party Software 
+installed separately by customer but are integrated for use 
+with McAfee Software  In the event that McAfee  requests a 
+report for confirmation, you agree to provide a system 
+generated report verifying your software deployment within 
+thirty (30) days, such request to occur no more than four 
+(4) times per year.  In the event that McAfee requires a 
+physical audit, such audit shall be preceded by thirty (30) 
+days written notice and shall occur no more than once per 
+year unless otherwise required for compliance with the 
+Sarbanes-Oxley Act. 
+
+19. Auto-Boot /Post Boot Mode.  McAfee shall have no 
+liability to you for any damages resulting from the use of 
+the Software in the "auto-boot" or "post-boot" mode. You are 
+advised that such tools are designed for product deployment 
+purposes only, and any other use does not provide adequate 
+data security.  Any such contrary use shall be at your sole 
+risk.  Moreover, in the event of a data breach resulting 
+from such contrary use, you shall not publicize McAfee's 
+name in connection with such breach, nor make any statements 
+that unfairly disparage the reputation of McAfee products.
+
+20. Miscellaneous.  This Agreement sets forth all rights for 
+the user of the Software and is the entire Agreement between 
+the parties.  This Agreement supersedes any other 
+communications, representations or advertising relating to 
+the Software and Documentation.  This Agreement may not be 
+modified except by a written addendum issued by a duly 
+authorized representative of McAfee.  No provision hereof 
+shall be deemed waived unless such waiver shall be in 
+writing and signed by McAfee.  If any provision of this 
+Agreement is held invalid, the remainder of this Agreement 
+shall continue in full force and effect.
+
+21. McAfee Customer Contact.  If you have any questions 
+concerning these terms and conditions, or if you would like 
+to contact McAfee for any other reason, please call (408) 
+992-8599 or (866) 622-3911, FAX to (972) 963-7001, or write: 
+McAfee, Inc., Attention: Customer Service, 5000 Headquarters 
+Drive, Plano, TX  75024,  or e-mail to 
+http://www.mcafeehelp.com.  Alternatively, you may contact 
+your local McAfee entity at the number listed at 
+http://www.McAfee.com.
+

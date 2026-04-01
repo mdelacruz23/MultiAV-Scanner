@@ -1,0 +1,288 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          star,stop,restart and status of multi-scan service
+# Short-Description: Enable to star,stop,restart and status of multi-scan service
+# Description:       The service to virus scan objects from S3 bucket or a local directory
+### END INIT INFO
+# set -x
+declare r HOSTNAME="$(hostname)"
+declare r HOST_IP="$(dig +short $HOSTNAME)"
+declare r MY_NAME="$(basename $0)-${HOST_IP}"
+declare r SCAN_HOST_NAME=${MY_NAME}
+declare r ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+declare r SCAN_LOCK="/tmp/lock_scan"
+
+declare r SQS_PATH="https://sqs.us-east-1.amazonaws.com/$ACCOUNT_ID/"
+# declare r SQS_OUTPUT_QUEUE="multiscan-output-test-events"
+declare r SQS_INPUT_QUEUE="mark-multiscan-input-s3-events"
+declare r SQS_OUTPUT_QUEUE="mark-multiscan-output-s3-events"
+declare r INFECTED_BUCKET="data-multiscan-infected"
+declare r FS_INPUT_DIR_PATH="/var/scan/input"
+declare r FS_OUTPUT_DIR_PATH="/var/scan/output"
+declare r FS_INFECTED_PATH="/var/scan/infected"
+# declare r REGISTRY_SERVICE="registry.master.forcenex.us/gap/data-movement/multiav-scan-aws-ec2-objects/multiav-scan:latest"
+declare r REGISTRY_SERVICE="registry.jadeuc.com/gap/dune/multiav-scan-aws-ec2-objects/multiav-scan:v7.0.2"
+# declare r REGISTRY_SERVICE="local/mvs:v7.0.2"
+declare r GB="GB"
+declare r LOCAL_DEFS=true
+declare r FS_SCANNERS=false
+declare r ENGINE_UPDATES=true
+declare r DEFS_BUCKET="data-vs-definitions"
+# declare r DEFS_BUCKET="drop-zonetest"
+declare r DEFS_PREFIX="scanners_defs"
+declare r BATCH_SIZE=5
+declare r SLACK_NOTIFY=True
+declare r SLACK_CHANNEL="#alert-large-file"
+#declare r SLACK_ENDPOINT="insert webhook"
+# Certs are only when CA has to be limited to Amazon 
+# declare r AWS_TLS_CA_BUNDLE="/usr/local/etc/openssl@1.1/cert.pem"
+declare r AWS_CERT_VERIFY=True
+
+declare r SCAN_DIR="~/var/scan"
+declare r LOG_CLAM_DIR="~/srv/mvs-log2/clamav"
+declare r LOG_MVS_DIR="~/srv/mvs-log2/multiav"
+
+do_start () {
+    echo "INFO: Starting S3 multi-scan service "
+    # create necessary directories if they don't exist
+    mkdir -p $SCAN_DIR $LOG_CLAM_DIR $LOG_MVS_DIR
+
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "ERROR: Failed to create required directories "
+        echo "Check permissions before proceeding"
+        exit $retVal
+    fi
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux
+        declare r CPUS=`getconf _NPROCESSORS_ONLN`
+        declare r MEM=`free -g | grep Mem  | awk '{print $NF}'`
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        declare CPUS=`getconf _NPROCESSORS_ONLN`
+        CPUS=$((CPUS - 1 ))
+        declare r MEM=`sysctl hw.memsize | awk '{ printf "%i\n", $2/1024/1024/1024 }'`
+    fi
+    declare SWAPMEM=$((${MEM} + ${MEM}*3/10))
+    OUTPUT_SQS_PATH="${SQS_PATH}${SQS_OUTPUT_QUEUE}"
+    if [[ ! $output_queue ]]
+    then
+        echo "WARNING:: SQS Output Queue is not provided, defaulting to ${SQS_OUTPUT_QUEUE}"
+    fi
+    echo "INFO: Output SQS Path ${OUTPUT_SQS_PATH}"
+
+    INPUT_SQS_PATH="${SQS_PATH}${SQS_INPUT_QUEUE}"
+    if [[ ! $input_queue ]]
+    then
+        echo "WARNING: SQS Input Queue is not provided, defaulting to ${INPUT_SQS_PATH}"
+    fi
+    echo "INFO: Input SQS Path ${INPUT_SQS_PATH}"
+
+    if [ $LOCAL_DEFS = true ]
+    then 
+    if [[ ! $bucket = true ]]
+    then
+        echo "WARNING: local download is specified but bucket not provided defaulting to: $DEFS_BUCKET"
+    fi
+    if [[ $url = true  && ( $access_key = false || $secret_key = false ) ]] 
+    then
+        echo "ERROR: 1 If Minio is used then url, access key and secret key must all be provided"
+        Help
+        exit
+    
+    elif [[ $url = false && ( $access_key = true  || $secret_key = true ) ]]
+    then
+        echo "ERROR: 2 If Minio is used then url, access key and secret key must all be provided"
+        Help
+        exit
+    fi
+    fi
+    echo "INFO: url: ${url} access key: ${access_key} secret_key: ${secret_key}"
+    echo "INFO: command: $1 ENGINE_UPDATES=${ENGINE_UPDATES} FS_SCANNERS=${FS_SCANNERS} DEFS_BUCKET=${DEFS_BUCKET} BATCH_SIZE=${BATCH_SIZE} LOCAL_DEFS=${LOCAL_DEFS} DEFS_PREFIX=${DEFS_PREFIX} DEFS_ACCESS=${DEFS_ACCESS} DEFS_SECRET=${DEFS_SECRET} DEFS_URI=${DEFS_URI}"
+    echo "Home: ${HOME} Docker run with  CPU: ${CPUS} RAM: ${MEM} SWAP: ${SWAPMEM}"
+
+    docker stop /mvs > /dev/null 2>&1
+    docker rm /mvs > /dev/null 2>&1
+
+    if [ -z ${DEFS_URI} ] 
+    then 
+        docker run -v ${HOME}/.aws:/home/mvs/.aws:ro  -v  ~/srv/mvs-log2:/var/log/:rw -v  ~/srv/scan:/var/scan/:rw --restart unless-stopped --cpus=${CPUS}  --memory=${MEM}${GB} --memory-swap=${SWAPMEM}${GB} -p 8009:8009 -p 2812:2812 -e ENGINE_UPDATES=${ENGINE_UPDATES} -e FS_SCANNERS=${FS_SCANNERS} -e INPUT_SQS_PATH=${INPUT_SQS_PATH} -e OUTPUT_SQS_PATH=${OUTPUT_SQS_PATH} -e INFECTED_BUCKET=${INFECTED_BUCKET} -e FS_INPUT_DIR_PATH=${FS_INPUT_DIR_PATH} -e FS_OUTPUT_DIR_PATH=${FS_OUTPUT_DIR_PATH} -e FS_INFECTED_PATH=${FS_INFECTED_PATH} -e LOCAL_DEFS=${LOCAL_DEFS} -e DEFS_BUCKET=${DEFS_BUCKET} -e DEFS_PREFIX=${DEFS_PREFIX} -e DEFS_URI=${DEFS_URI} -e DEFS_ACCESS=${DEFS_ACCESS} -e DEFS_SECRET=${DEFS_SECRET} -e SLACK_NOTIFY=${SLACK_NOTIFY} -e SLACK_CHANNEL=${SLACK_CHANNEL} -e SLACK_ENDPOINT=${SLACK_ENDPOINT} -e BATCH_SIZE=${BATCH_SIZE} --hostname ${SCAN_HOST_NAME} -d --name mvs ${REGISTRY_SERVICE}
+    else
+        /usr/bin/docker run -v ${HOME}/.aws:/home/mvs/.aws:ro  -v  ~/srv/mvs-log2:/var/log/:rw -v  ~/srv/scan:/var/scan/:rw --restart unless-stopped --cpus=${CPUS}  --memory=${MEM}${GB} --memory-swap=${SWAPMEM}${GB} -p 8009:8009 -p 2812:2812 -e ENGINE_UPDATES=${ENGINE_UPDATES} -e FS_SCANNERS=${FS_SCANNERS} -e INPUT_SQS_PATH=${INPUT_SQS_PATH} -e OUTPUT_SQS_PATH=${OUTPUT_SQS_PATH} -e INFECTED_BUCKET=${INFECTED_BUCKET} -e FS_INPUT_DIR_PATH=${FS_INPUT_DIR_PATH} -e FS_OUTPUT_DIR_PATH=${FS_OUTPUT_DIR_PATH} -e FS_INFECTED_PATH=${FS_INFECTED_PATH} -e LOCAL_DEFS=${LOCAL_DEFS} -e DEFS_BUCKET=${DEFS_BUCKET} -e DEFS_PREFIX=${DEFS_PREFIX} -e SLACK_NOTIFY=${SLACK_NOTIFY} -e SLACK_CHANNEL=${SLACK_CHANNEL} -e SLACK_ENDPOINT=${SLACK_ENDPOINT} -e BATCH_SIZE=${BATCH_SIZE} --hostname ${SCAN_HOST_NAME} -d --name mvs ${REGISTRY_SERVICE}
+    fi
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "ERROR: failed to start scan service"
+    fi
+    exit $retVal
+}
+do_stop () {
+    echo "INFO: Stopping scan service "
+    docker stop mvs || true && docker rm mvs || true 
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "ERROR: Failed to stop scan service. Verify that it is still running "
+    fi
+    return $retVal
+}
+do_prune () {
+    echo "INFO: Pruning docker images"
+    docker system prune  -fa
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "ERROR: Failed to remove scan service docker image."
+    fi
+    return $retVal
+}
+
+do_stop_scan () {
+    echo "Stoping MVS scan"
+    docker exec -u root -ti mvs /bin/bash -c "/bin/touch $SCAN_LOCK"
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "Failed to stop MVS scan"
+    fi
+    return $retVal
+}
+do_start_scan () {
+    echo "Starting MVS scan"
+    docker exec -u root -ti mvs /bin/bash -c "/bin/rm $SCAN_LOCK"
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "Failed to start MVS scan"
+    fi
+    return $retVal
+}
+
+
+Help()
+{
+   # Display Help
+   echo -e "\nMulti Virus Scanner Service"
+   echo
+   echo "Syntax: $0  <stop|start|restart> [-a|b|l|o|p|i|s|u|h]"
+   echo "options:"
+   echo "a     - Access Key"
+   echo "s     - Secret Key"
+   echo "b     - S3 Bucket with virus definitions"
+   echo "c     - Batch Size"
+   echo "e     - Engine Updates"
+   echo "o     - SQS Output Queue "
+   echo "p     - Prefix in S3 bucket "
+   echo "i     - SQS Input Queue "
+   echo "l     - Download local virus definitions"
+   echo "u     - URI override - used in Minio"
+   echo "h     - Print this Help."
+   echo
+}
+
+# echo "The number of arguments is: $#"
+if [ $# -gt 1 ]
+then
+    command=$1
+fi    
+# For start/restart we need to check for additional arguments 
+# if download of local virus definition files from S3 or Minio 
+# is required
+bucket=false
+prefix=false
+access_key=false
+secret_key=false
+url=false
+case "$1" in
+    start|restart)
+       OPTIND=2
+       while getopts "fa:hb:e:lo:p:i:s:u:" option; do
+          case ${option} in
+             h|help) # display Help
+                Help
+                exit;;
+             a) # access key 
+                access_key=true
+                DEFS_ACCESS=${OPTARG};;
+             b) # bucket
+                bucket=true
+                DEFS_BUCKET=${OPTARG};;
+             c) # collection size
+                BATCH_SIZE=${OPTARG};;
+             e) # Engine Updates
+                ENGINE_UPDATES=${OPTARG};;
+             f) # FS scanners
+                FS_SCANNERS=true
+                echo "FS scanners";;
+             l) # local defs
+                LOCAL_DEFS=true
+                echo "Local defs";;
+             o) # SQS output queue
+                output_queue=true
+                SQS_OUTPUT_QUEUE=${OPTARG};;
+             p) # prefix
+                prefix=true
+                DEFS_PREFIX=${OPTARG};;
+             i) # SQS input queue
+                input_queue=true
+                SQS_INPUT_QUEUE=${OPTARG};;
+             s) # secret key 
+                secret_key=true
+                DEFS_SECRET=${OPTARG};;
+             u) # url 
+                url=true
+                DEFS_URI=${OPTARG};;
+            \?) # Invalid option
+                echo "ERROR: Invalid option"
+                Help
+                exit;;
+          esac
+       done
+esac
+
+# exit 0
+
+case "$1" in
+
+    start|stop)
+        do_${1}
+        ;;
+
+    restart)
+        do_stop
+        do_start
+        ;;
+
+    reload|force-reload)
+        do_stop
+        do_prune
+        do_start
+        ;;
+
+    status)
+        docker ps | grep -q multiav-scan
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+            echo "INFO: scan service is not running "
+        else
+            echo "INFO: scan service is running "
+        fi
+        exit $retVal
+        ;;
+
+    stop-scan)
+        do_stop_scan
+        ;;
+
+    start-scan)
+        do_start_scan
+        ;;
+
+    prune)
+        do_prune
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart|reload|force-reload|status|prune}"
+        exit 1
+        ;;
+esac
+exit 0
+

@@ -1,0 +1,31 @@
+include:
+  - project: gap/guild
+    ref: main
+    file: templates/guildable-jobs.yaml
+
+stages:
+  - Copy_Charts
+  - Grype_Scan
+  - Generate_Trigger
+  - Child_Pipeline
+
+Copy_Charts:
+  stage: Copy_Charts
+  extends: .copy_charts
+
+Grype_Scan:
+  stage: Grype_Scan
+  extends: .grype_scan_list
+
+Grype_Scan:
+  stage: Grype_Scan
+  extends: .grype_scan_list
+
+Generate_Trigger:
+  stage: Generate_Trigger
+  extends: .generate_trigger
+
+Child_Pipeline:
+  stage: Child_Pipeline
+  extends: .child_pipeline
+
